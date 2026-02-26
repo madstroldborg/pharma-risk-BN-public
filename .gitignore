@@ -1,0 +1,22 @@
+# Private / restricted data
+data_private/
+
+# Generated outputs
+outputs/
+
+# renv cache
+renv/library/
+renv/staging/
+
+# R / system files
+.Rhistory
+.RData
+.Ruser
+.Rproj.user/
+.DS_Store
+Thumbs.db
+
+# temp files
+~$*
+*.tmp
+*.bak

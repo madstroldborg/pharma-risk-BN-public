@@ -1,0 +1,663 @@
+---
+title: 'rSMILE for pharma risk model '
+authors: Miriam Glendell, Camilla Negri & Mads Troldborg
+date: "2025-07-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Notebook for running the pharma risk model spatially using rSMILE.
+
+**Important note:**  
+This analysis requires the proprietary **GeNIe** software and the R package
+`rSMILE`. Due to licensing restrictions, the BN model file is not included in
+this repository. This document is provided for transparency and reproducibility
+of the modelling workflow.
+
+## Data inputs
+This analysis uses a combination of:
+
+**(a) Shareable, processed data**
+- Monthly prescribing statistics (values derived in 01_process_prescribing_data.R and built in to the BN model)
+- Flow statistics by monitoring point (values derived in 03_process_flow_data.R and saved in Data/processed)
+- Sewage treatment work (STW) information summarised by monitoring point sub-catchments (derived in 02_process_WWTW_info.R and saved in Data/processed) 
+- Excretion parameters (derived in 04_process_excretion_data.Rmd and built into BN model)
+- Wastewater removal (derived in 05_process_STW_removal_efficiencies.Rmd and built into BN model)  
+- Bayesian Network model file (`.xdsl`)  
+
+**(b) Restricted / licensed inputs**
+- Observed concentration datasets
+- rSMILE / GeNIe license
+
+Restricted inputs are expected to be located in `Data_private/`.
+
+
+## Outputs:
+ - Data/processed/simulated_PEC_by_pharma_xxxTreatment_xxxPrescribing.RData
+ - Outputs/figures/plot_ng_XXX_xxxTreatment_xxxPrescribing.png
+ - Outputs/figures/plot_EQR_MP_XXX_xxxTreatment_xxxPrescribing.png
+ - Outputs/summary_all_pharma_PEC_xxxTreatment_xxxPrescribing.csv
+ - Outputs/results_EQR_all_MPs_xxxTreatment_xxxPrescribing.csv
+
+
+# Load libraries and paths
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!requireNamespace("rSMILE", quietly = TRUE)) {
+  stop(
+    "rSMILE not installed. This analysis requires licensed GeNIe software ",
+    "and cannot be executed without it."
+  )
+}
+
+library(rSMILE)
+library(stringi)
+library(tidyverse)
+library(scales)
+library(here)
+
+source(here::here("R", "utils.R"))
+
+```
+
+# Load license 
+```{r}
+# License issued by BayesFusion Licensing Server and must be obtained in order to run this notebook
+
+# This code must be executed before any other rSMILE object is created 
+source(file.path(path_private, "rSMILE_License.R"))
+
+```
+
+
+# Read BN model 
+```{r, echo=FALSE}
+net <- Network() 
+net$readFile(file.path(path_model, "Pharma Model Almond.xdsl"))
+
+```
+
+
+# Load flow statisitcs 
+```{r, echo=FALSE, include=FALSE}
+# Mean and SD of the simulated daily discharge (using SWAT) on log-scale at each monitoring point (sub-catchment) by month. Basically, the flows at each monitoring point are (assumed to be) log-normal distributed.
+Evidence_flow <- read.csv(file.path(path_processed, "monthly_mean_and_sd_simulated_daily_logQ_MP_Almond.csv"))  
+Evidence_flow <- subset(Evidence_flow, select= -c(MP_name,mean_Q, median_Q, sd_Q, median_lnQ)) %>% 
+  rename(MP = MP_no,
+         lnQ_mean = mean_lnQ,
+         lnQ_sd = sd_lnQ)
+
+#split into a list
+Discharge_scenarios <- split(Evidence_flow , f = Evidence_flow$MP)
+```
+
+# Load STW information/evidence 
+```{r, echo=FALSE, include=FALSE}
+# read in evidence for STW PE and treatment type for each monitoring point
+treatment_PE <- read.csv(file.path(path_processed,"STW_PE_Dist_Treatment_by_MP.csv")) # 
+
+treatment <- treatment_PE %>% dplyr::select(MP_no,SepticTank,Preliminary,Primary,SecondaryA,SecondaryB,TertiaryA1,TertiaryA2,TertiaryB1,TertiaryB2)
+
+# transpose
+treatment2 <- treatment %>% 
+  rownames_to_column() %>% 
+  pivot_longer(!rowname, names_to = "col1", values_to = "col2") %>% 
+  pivot_wider(names_from = "rowname", values_from = "col2")
+
+# rename first column name to 'Treatment_type'
+treatment2 <- treatment2 %>% rename(Treatment_type=col1)
+
+# remove the first column from treatment2
+treatment3 <- treatment2 %>% dplyr::select(-Treatment_type)
+treatment3 <- treatment3[-c(1),] # gets rid of first row 
+names(treatment3) <- as.character(treatment$MP_no)
+treatment3 <- round(treatment3,digits=3)
+
+
+```
+
+
+# Extract Total PE by monitoring point
+```{r}
+Total_PE_df <- dplyr::select(treatment_PE,Total_PE)
+Total_PE_df <- round(Total_PE_df,0)
+rownames(Total_PE_df) <- as.character(treatment$MP_no)
+
+```
+
+
+# Write flow equations for Genie
+```{r}
+lognormal_scenario_equations<- function(mydf){
+    mean <- mydf$lnQ_mean
+    sd   <- mydf$lnQ_sd
+    lognormals<-
+      sprintf("Lognormal(%.2f, %.3f)", mean, sd) %>%
+      stri_paste(collapse=',') # string together all the lognormals
+    equation <- paste0("Disch=Choose(Month,",lognormals,")")
+    equation #include incipit of equation "Disch=Choose(Month," and then closing bracket
+  return(equation)
+}
+```
+
+
+# Get flow equation for every scenario (every df in the list)
+```{r}
+all_Discharge_equations <- lapply(Discharge_scenarios, lognormal_scenario_equations)
+
+
+```
+
+# Get monthly matrix to get monthly results 
+```{r}
+# apply discrete evidence on a single discrete node (month)
+# set evidence on Month
+months      <- str_to_lower(month.abb)
+months_prob <- data.frame(diag(rep(1,12)))
+colnames(months_prob) <- months
+
+```
+
+
+# Write PE equations
+```{r}
+# Initialize an empty list for PE equations
+PE_equations <- vector("list", length = nrow(Total_PE_df))  
+
+# Iterate over the rows of Total_PE_df
+for (i in 1:nrow(Total_PE_df)) {
+  # Check if the value is zero
+  if (Total_PE_df[i, ] == 0) {
+    # Print the row name where the value is zero
+    print(paste("Zero found in item:", rownames(Total_PE_df)[i]))
+  }
+  
+  # Create the equation for each row
+  PE_equations[[i]] <- sprintf("Total_PE=%.1f", Total_PE_df[i, ])
+}
+
+# Assign row names from Total_PE_df to the list
+names(PE_equations) <- rownames(Total_PE_df)
+```
+
+# Update BN model with location specific data and extract resulting simulated pharma concentration (or whatever target node is chosen).  
+```{r}
+
+calculate_posterior <- function(my_net, node1_handle, node2_handle, node3_handle, node4_handle, target_node, equations_list, probabilities_df, treatment_df, Total_PE_equations, Pharma_id, treat_mgmt="baseline", prescr_mgmt="baseline") {
+  
+  results <- list()  # Initialize an empty list to store the results
+  
+  # Set evidence for pharmaceutical compound
+  my_net$setEvidence("Pharma", Pharma_id)
+  
+  # Set evidence for treatment management scenario
+  my_net$setEvidence("Treatment_scenario", treat_mgmt) 
+  
+  # Set evidence for prescribing management scenario
+  my_net$setEvidence("Prescription_scenario", prescr_mgmt)
+ 
+  # Iterate over the locations (20 locations from equations_list)
+  for (eq_name in names(equations_list)) {   # eq_name is the unique location number (as a string)
+    
+    # Get the equation for node4 from the Total_PE_equations list for this location
+    node4_eq <- Total_PE_equations[[eq_name]]  # This should match the location name
+    
+    # If PE = 0, then there is no need to calculate the posterior
+    if(node4_eq == "Total_PE=0.0") {
+      month_states     <- str_to_lower(month.abb)
+      location_results <- switch(target_node,
+                                 PEC  = setNames(rep(list(0), 12), month_states),
+                                 PLRR = setNames(rep(list(-4), 12), month_states),
+                                 PRRQ = setNames(rep(list(c(1, 0)), 12), month_states),
+                                 stop("Unknown Target Node")
+                                 )
+    } else {
+      
+    # Initialize a list to store results for this location (eq_name)
+    location_results <- list()
+    
+    my_net$setNodeEquation(node4_handle, node4_eq)
+    
+    # Get the equation for the current location for node2
+    node2_eq <- equations_list[[eq_name]]
+    my_net$setNodeEquation(node2_handle, node2_eq)
+    
+    # Extract treatment for this location (assumed to be in the correct order)
+    # The `eq_name` corresponds to a specific location, which matches a column name in the `treatment_df` tibble. The treatment values for the location is extracted using
+    # `treatment_df[[eq_name]]`. This yields the treatment values for the specific location as a one-column tibble, which is then converted to a numeric vector using
+    # `as.numeric()`. The treatment values are expected to be in the correct order /  number (e.g., as many values as there are treatment options).
+    treatment <- as.numeric(treatment_df[[eq_name]])  # Convert to numeric vector
+    
+    # Set treatment for this location
+    # The `my_net$setNodeDefinition(node3_handle, treatment)` sets the treatment values for the current location (specified by `eq_name`)
+    my_net$setNodeDefinition(node3_handle, treatment)  # Set the treatment for this location
+
+    # Iterate through each month (columns in probabilities_df)
+    for (i in 1:ncol(probabilities_df)) {
+      
+      # Define node 1 using the values from the current column (month) in probabilities_df
+      my_net$setNodeDefinition(node1_handle, probabilities_df[, i])  # Set node1 for this month
+
+      # Update beliefs in the network
+      my_net$updateBeliefs()
+      
+      # Get posterior beliefs for the target node
+      beliefs <- my_net$getNodeValue(target_node)
+      
+      # Store beliefs for this location and month (use month names from probabilities_df columns)
+      month_name <- colnames(probabilities_df)[i]
+      location_results[[month_name]] <- beliefs
+    }
+    
+    } # end of if else
+    
+    # Store the location results (eq_name) in the results list
+    results[[eq_name]] <- location_results
+  }
+  
+  return(results)  # Return the final results
+}
+
+
+```
+
+
+# Model all pharmaceuticals at all locations
+```{r}
+# List of pharmaceuticals
+pharmas<-c("AZM","BZF","CBZ","CIP","CLR","DFC","ERY","HCT","IBU","NAP","PAR","RAN","SDZ","SMX","TML","TMP")
+
+```
+
+# ------------------------------------- # 
+# RUN MODEL WITH PEC AS TARGET NODE
+# ------------------------------------- # 
+```{r}
+start_time <- Sys.time()
+
+# Select only points with PE>0
+id0       <- which(Total_PE_df$Total_PE>0)
+id0_names <- rownames(Total_PE_df)[id0]
+selected_Discharge_equations <- all_Discharge_equations[id0_names]
+selected_treatment    <- treatment3[,names(treatment3) %in% id0_names]
+selected_PE_equations <- PE_equations[id0]
+
+# Initialize a list to store results for each pharma
+posterior_results_by_pharma <- list()
+
+# clear all previous evidence in model
+net$clearAllEvidence()
+
+# CHOOSE TARGET NODE 
+# Target node options: PEC, PLRR, PRRQ
+my_target  = "PEC" # 
+
+# CHOOSE treatment scenario (baseline or optimal)
+treat_scenario  = "baseline" # "baseline" # "optimal"
+# CHOOSE prescribing scenario (baseline, reduced_10pct or reduced_50pct)
+prescr_scenario = "baseline" # "reduced_50pct" # "baseline" # "reduced_10pct"
+
+# Iterate over each pharma
+for (pharma in pharmas) {
+  
+  # Apply calculate_posterior for each pharma
+  posterior_results_by_pharma[[pharma]] <- calculate_posterior(
+    my_net = net,
+    node1_handle = "Month",
+    node2_handle = "Disch",
+    node3_handle = "Treatment_type",
+    node4_handle = "Total_PE", 
+    target_node  = my_target, # PEC, PLRR PRRQ # would be PLRR for EQR and PRRQ for discrete node of probability of exceedance, PEC otherwise
+    equations_list = selected_Discharge_equations,#all_Discharge_equations,
+    probabilities_df = months_prob,
+    treatment_df = selected_treatment, 
+    Total_PE_equations = selected_PE_equations, 
+    Pharma_id   = pharma,  # Use pharma for Pharma_id
+    treat_mgmt  = treat_scenario,
+    prescr_mgmt = prescr_scenario
+    )
+  
+}
+
+end_time <- Sys.time()
+end_time - start_time
+
+
+```
+<!-- # Save output -->
+<!-- ```{r} -->
+<!-- # save -->
+<!-- saveRDS( -->
+<!--   posterior_results_by_pharma, -->
+<!--   file = file.path(path_processed, paste0("posterior_",my_target,"_by_pharma_list_",treat_scenario,"Treatment_",prescr_scenario,"Prescribing.rds")) -->
+<!-- ) -->
+
+<!-- ``` -->
+
+
+# Create dataframes for figures 
+```{r}
+
+combined_df <- imap_dfr(posterior_results_by_pharma, ~ {
+  pharma_name <- .y
+  imap_dfr(.x, ~ {
+    location_name <- .y
+    imap_dfr(.x, ~ {
+      tibble(
+        Pharma        = factor(pharma_name),
+        Location      = factor(paste0("MP",location_name)),
+        Month         = .y,
+        Concentration = .x
+      )
+    })
+  })
+})
+
+combined_df <- combined_df %>% mutate(Month = factor(Month, levels = str_to_lower(month.abb)))
+
+# save combined_df for later comparison to observed concentrations
+save(
+  combined_df,
+  file = file.path(path_processed, paste0("simulated_",my_target,"_by_pharma_",treat_scenario,"Treatment_",prescr_scenario,"Prescribing.RData"))
+)
+
+rm(posterior_results_by_pharma)
+```
+
+
+# PLOT RESULTS
+```{r}
+# Define a custom palette with 20 colors because there are 20 locations, even though some will have 0 concentration
+custom_colors <- c(
+  "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666", 
+  "#1f78b4", "#33a02c", "#fb9a99", "#cab2d6", "#ff7f00", 
+  "#6a3d9a", "#b15928", "#a6cee3", "#b2df8a", "#fdbf6f", "#ff99ff", "#8dd3c7",
+  "yellow","red","grey"
+)
+```
+
+
+```{r}
+# Increase the size of the plotting window in RStudio
+options(repr.plot.width = 14, repr.plot.height = 10)
+
+# Only plot points for which we have measurements:
+selected_locations <- paste0("MP",id0_names[as.numeric(id0_names) <= 21]) # 
+
+unique_pharmas <- unique(combined_df$Pharma)
+
+# Iterate over each pharma
+for (pharma in unique_pharmas) {
+  # Extract the transformed data frame for the current pharmaceutical
+ # pharma_df <- pharma_data_list[[pharma]]
+  
+  # Filter out rows with Concentrations that are 0
+  pharma_df <- combined_df %>% filter(Pharma == pharma,
+                                    Concentration != 0,
+                                    Location == selected_locations)
+  
+  # Multiply Concentration by 1000 to scale it up to ng L-1
+  pharma_df <- pharma_df %>% mutate(Concentration = Concentration * 1000)
+  
+  # Generate the plot using ggplot
+  log10_plots_ng <- ggplot(pharma_df, aes(x = Month, y = log10(Concentration), color = Location)) + 
+    geom_boxplot(width = 0.25, outlier.shape = NA) +
+    scale_color_manual(values = custom_colors) +  # Apply custom palette
+    labs(
+      title = paste("Concentrations of", pharma),  # Customized title
+      x = "Month", y = "log10 Concentration (ng/L)"  # Update y-axis label to ng/L
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    facet_wrap(~ Location, , scales = "free_y") +
+    scale_y_continuous(limits = c(-4,5))  # Adjusted the y-axis limits for ng/L scale
+  
+  # Print the plot to display in the R session
+ print(log10_plots_ng)
+
+ggsave(
+  filename=paste0("plot_ng_",pharma,"_",treat_scenario,"Treatment_",prescr_scenario,"Prescribing.png"),
+  log10_plots_ng,
+  path = file.path(path_figures),
+  width = 10,#180,
+  height = 6 #140,
+  #units = "mm",
+  #dpi = 600
+)
+
+}
+
+
+```
+
+
+# Get statistics from results of continuous variables (results in ug L-1 on real scale, as in the model)
+```{r}
+
+# Group by Pharma, Location, and Month, and calculate summary statistics
+summary_df <- combined_df %>%
+  group_by(Pharma, Location, Month) %>%
+  summarise(
+    mean_conc = mean(Concentration, na.rm = TRUE),  # Mean of concentrations 
+    sd_conc = sd(Concentration, na.rm = TRUE),  # Standard deviation 
+    n = n(),  # Number of data points
+    median_conc = median(Concentration, na.rm = TRUE)  # Median of concentrations 
+  ) %>%
+  mutate(
+    # Calculate the lower and upper limits based on the log mean and SD
+    low_conc = mean_conc - sd_conc,
+    upper_conc = mean_conc + sd_conc,
+    ) %>%
+  dplyr::select(Pharma, Location, Month, mean_conc, sd_conc, median_conc, n, low_conc, upper_conc)
+
+
+```
+# Add statistics for location with PE=0
+```{r}
+
+# Get locations with PE==0
+id0_location <- paste0("MP", rownames(Total_PE_df)[which(Total_PE_df$Total_PE==0)])
+summary_df_add <- expand.grid(Pharma=pharmas, Location=id0_location, Month=str_to_lower(month.abb), mean_conc=0, sd_conc=0, median_conc=0,n=0,low_conc=0,upper_conc=0)
+
+summary_df_add <- summary_df_add[with(summary_df_add, order(Pharma,Location)),]
+summary_df     <- rbind(summary_df,summary_df_add)
+
+```
+
+# save statistics
+```{r}
+
+write.csv(
+  summary_df,
+  file = file.path(path_outputs, paste0("summary_all_pharma_", my_target,"_",treat_scenario,"Treatment_",prescr_scenario,"Prescribing.csv")),
+  row.names = FALSE
+)
+  
+
+```
+
+
+# ------------------------------------- # 
+# RUN MODEL WITH PRRQ AS TARGET NODE
+# ------------------------------------- # 
+```{r}
+start_time <- Sys.time()
+
+# Select all points with PE>=0
+id0       <- which(Total_PE_df$Total_PE>=0)
+id0_names <- rownames(Total_PE_df)[id0]
+selected_Discharge_equations <- all_Discharge_equations[id0_names]
+selected_treatment    <- treatment3[,names(treatment3) %in% id0_names]
+selected_PE_equations <- PE_equations[id0]
+
+# Initialize a list to store results for each pharma
+posterior_results_by_pharma <- list()
+
+# clear all previous evidence in model
+net$clearAllEvidence()
+
+# CHOOSE TARGET NODE 
+# Target node options: PEC, PLRR, PRRQ
+my_target  = "PRRQ" # 
+
+# CHOOSE treatment scenario (baseline or optimal)
+treat_scenario  = "baseline" # "baseline" # "optimal"
+# CHOOSE prescribing scenario (baseline, reduced_10pct or reduced_50pct)
+prescr_scenario = "baseline" # "reduced_50pct" # "baseline" # "reduced_10pct"
+
+
+# Iterate over each pharma
+for (pharma in pharmas) {
+  
+  # Apply calculate_posterior for each pharma
+  posterior_results_by_pharma[[pharma]] <- calculate_posterior(
+    my_net = net,
+    node1_handle = "Month",
+    node2_handle = "Disch",
+    node3_handle = "Treatment_type",
+    node4_handle = "Total_PE", 
+    target_node  = my_target, # PEC, PLRR PRRQ # would be PLRR for EQR and PRRQ for discrete node of probability of exceedance, PEC otherwise
+    equations_list = selected_Discharge_equations,#all_Discharge_equations,
+    probabilities_df = months_prob,
+    treatment_df = selected_treatment, 
+    Total_PE_equations = selected_PE_equations, 
+    Pharma_id   = pharma,  # Use pharma for Pharma_id
+    treat_mgmt  = treat_scenario,
+    prescr_mgmt = prescr_scenario
+    )
+  
+}
+
+end_time <- Sys.time()
+end_time - start_time
+
+```
+
+
+# Save output
+```{r}
+# save
+saveRDS(
+  posterior_results_by_pharma, 
+  file = file.path(path_processed, paste0("posterior_",my_target,"_by_pharma_list_",treat_scenario,"Treatment_",prescr_scenario,"Prescribing.rds"))
+) 
+
+
+
+
+
+
+```
+
+
+# Dataframes for bar charts to plot EQR figures
+```{r}
+# Initialize a list to store the data frames for each pharmaceutical
+pharma_data_list2 <- list()
+
+# Loop over each pharmaceutical in posterior_results_by_pharma
+for (pharma in names(posterior_results_by_pharma)) {
+  # Initialize an empty list to store each location's data for the current pharma
+  pharma_location_data <- list()
+  
+  # Loop over each location within the current pharma
+  for (location in names(posterior_results_by_pharma[[pharma]])) {
+    # Extract the data for each month at the current location and pharma
+    location_data <- posterior_results_by_pharma[[pharma]][[location]]
+        
+    if(location=="21") location="20"  # CHANGING NAME OF MP21 TO MP20
+    
+    # Convert location_data to a data frame in long format for ggplot, adding Pharma and Location
+    location_df <- data.frame(
+      Month = factor(rep(names(location_data),each=2)),  # Month as factor
+      EQR   = factor(seq(1,2)),
+      Probability = unlist(location_data),
+      Location = factor(paste0("MP", location)),  # Location as "MP1", "MP2", etc., and as factor
+      Pharma = factor(pharma)  # Pharma as factor
+   ) 
+    levels(location_df$EQR)<-c("Below","Above")
+   
+    # Append the location data to the current pharma's list
+    pharma_location_data[[location]] <- location_df
+  }
+  
+  # Combine all location data frames for the current pharma
+  pharma_data_list2[[pharma]] <- do.call(rbind, pharma_location_data)
+  rownames(pharma_data_list2[[pharma]])<-seq(1:nrow(pharma_data_list2[[pharma]])) #fix a problem with row naming
+}
+```
+
+
+# Plotting discrete target variable PRRQ
+
+```{r}
+# plotting results of discrete target variable PRRQ
+#Increase the size of the plotting window in RStudio
+options(repr.plot.width = 14, repr.plot.height = 10)
+
+select_MPs <- unique(pharma_data_list2[[1]]$Location)
+
+# Use `pharma_data_list2` for plotting discrete probabilities
+for (pharma in names(pharma_data_list2)) {
+  # Extract the transformed data frame for the current pharmaceutical
+  pharma_df <- pharma_data_list2[[pharma]] %>% filter(Location %in% select_MPs)
+  
+  # Generate the plot using ggplot
+  EQR_plots <- ggplot(pharma_df, aes(x = fct_inorder(Month), y=Probability, fill = EQR)) + 
+    geom_col(position="stack", colour = "black",linewidth = 0.15, width = 1) +  
+    scale_fill_manual(values = c("Below" = "grey80",  "Above" = "grey30")) +
+    #scale_fill_manual(values = c("Below" = "#1E88E5", "Above" = "#FFC107")) +  # colour option
+    scale_y_continuous(
+       labels = percent_format(accuracy = 1),
+       expand = c(0, 0)
+       ) +    
+    facet_wrap(~ Location, ncol=5) +
+    labs(
+      title = paste("Probability of exceedance", pharma),  # Customized title
+      x = "Month", y = "Probability", fill = "EQR" 
+    ) + 
+  
+  theme_bw(base_size = 11) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    strip.background = element_rect(fill = "white"),
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 90, vjust=0.5, hjust = 1),
+    legend.position = "top"
+  )
+
+
+  # Print the plot to display in the R session
+  print(EQR_plots)
+  
+  ggsave(
+  filename=paste0("plot_EQR_MP_",pharma,"_",treat_scenario,"Treatment_",prescr_scenario,"Prescribing.png"),
+  EQR_plots,
+  path = file.path(path_figures),
+  width = 220,
+  height = 140,
+  units = "mm",
+  dpi = 600
+)
+
+}
+```
+
+
+```{r}
+# Now combine all pharmaceuticals into a single data frame and save in csv file
+combined_df_2 <- do.call(rbind, pharma_data_list2)
+
+write.csv(
+  combined_df_2,
+  file = file.path(path_outputs, paste0("results_EQR_all_MPs_",treat_scenario,"Treatment_",prescr_scenario,"Prescribing.csv")),
+  row.names = FALSE
+)
+  
+```
+
+
+

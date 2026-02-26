@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This network was created in GeNIe Academic, which can be used for academic teaching and research purposes only -->
+<smile version="1.0" id="Network1" numsamples="10000" discsamples="10000">
+	<nodes>
+		<cpt id="Pharma">
+			<state id="AZM" />
+			<state id="BZF" />
+			<state id="CBZ" />
+			<state id="CIP" />
+			<state id="CLR" />
+			<state id="DFC" />
+			<state id="ERY" />
+			<state id="HCT" />
+			<state id="IBU" />
+			<state id="NAP" />
+			<state id="PAR" />
+			<state id="RAN" />
+			<state id="SDZ" />
+			<state id="SMX" />
+			<state id="TML" />
+			<state id="TMP" />
+			<probabilities>0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625 0.0625</probabilities>
+		</cpt>
+		<equation id="ER">
+			<parents>Pharma</parents>
+			<definition lower="0" upper="1">ER=Min(1,Max(0,Choose(Pharma,Beta(3.52,2.91),Beta(10.84,12.63),Beta(1.19,7.15),Beta(3.12,4.53),Beta(3.67,8.76),Beta(0.9,11.2),Beta(0.84,0.73),Beta(0.86,0.19),Beta(5.09,38.54),Beta(1.13,1.29),Beta(0.19,3.09),Beta(1.12,2.15),Beta(4.16,5.72),Beta(2.73,12.59),Beta(0.96,3.78),Beta(4.31,4.5))))</definition>
+			<discretization>
+				<interval label="State0" upper="0.1" />
+				<interval label="State1" upper="1" />
+			</discretization>
+		</equation>
+		<equation id="Total_PE">
+			<definition lower="0" upper="780000">Total_PE=204126</definition>
+			<discretization>
+				<interval label="State0" upper="390000" />
+				<interval label="State1" upper="780000" />
+			</discretization>
+		</equation>
+		<cpt id="Month">
+			<state id="jan" />
+			<state id="feb" />
+			<state id="mar" />
+			<state id="apr" />
+			<state id="may" />
+			<state id="jun" />
+			<state id="jul" />
+			<state id="aug" />
+			<state id="sep" />
+			<state id="oct" />
+			<state id="nov" />
+			<state id="dec" />
+			<probabilities>0.08333333333333333 0.083333333 0.083333333 0.083333333 0.083333333 0.083333333 0.083333333 0.083333333 0.083333333 0.083333333 0.083333333 0.083333333</probabilities>
+		</cpt>
+		<equation id="stMP">
+			<parents>Month Pharma</parents>
+			<definition lower="0" upper="500000000000">stMP=Max(0.01,Choose(Pharma,Choose(Month,Normal(2.75,0.48),Normal(2.72,0.47),Normal(3,0.43),Normal(2.74,0.4),Normal(2.87,0.53),Normal(2.68,0.38),Normal(2.77,0.42),Normal(2.8,0.41),Normal(2.65,0.18),Normal(2.86,0.25),Normal(2.93,0.32),Normal(3.11,0.13)),Choose(Month,Normal(3.1,0.36),Normal(3.02,0.28),Normal(3.29,0.5),Normal(3.07,0.28),Normal(3.45,0.42),Normal(3.02,0.32),Normal(3.2,0.59),Normal(3.29,0.5),Normal(3,0.34),Normal(3.28,0.42),Normal(3.32,0.36),Normal(3.33,0.33)),Choose(Month,Normal(44.63,1.33),Normal(44.61,4.09),Normal(48.85,5.06),Normal(46.98,4.07),Normal(48.02,1.43),Normal(45.56,1.53),Normal(47.34,3.18),Normal(48.14,2.77),Normal(44.77,2.9),Normal(47.69,2.37),Normal(48.08,2.29),Normal(49.21,4.09)),Choose(Month,Normal(6.86,1.96),Normal(6.26,1.34),Normal(6.47,1),Normal(6.02,1.22),Normal(5.93,1.18),Normal(5.84,1.17),Normal(5.69,1.09),Normal(6.17,1.17),Normal(6.09,1.11),Normal(6.47,0.88),Normal(6.32,0.63),Normal(6.54,1.04)),Choose(Month,Normal(18.32,4.69),Normal(16.34,3.8),Normal(18.67,3.29),Normal(16.71,3.99),Normal(16.5,4.81),Normal(15.54,3.66),Normal(14.59,2.94),Normal(13.95,1.95),Normal(15.02,2.73),Normal(15.98,3.26),Normal(16.46,2.38),Normal(19.14,3.67)),Choose(Month,Normal(19.25,3.45),Normal(18.3,3.09),Normal(19.71,3.33),Normal(18.82,4.09),Normal(19.62,3.93),Normal(19.09,3.29),Normal(19.53,4.42),Normal(19.68,4.06),Normal(19.37,3.9),Normal(20.1,4.34),Normal(19.69,3.68),Normal(18.57,1.7)),Choose(Month,Normal(11.79,2.67),Normal(11.56,2.43),Normal(12.74,2.79),Normal(11.38,1.6),Normal(12.33,2.65),Normal(10.69,2.13),Normal(11.68,2.84),Normal(11.39,1.96),Normal(11.16,1.97),Normal(11.88,1.71),Normal(11.37,1.91),Normal(12.64,1.88)),Choose(Month,Normal(0.13,0.04),Normal(0.15,0.03),Normal(0.15,0.04),Normal(0.16,0.04),Normal(0.14,0.03),Normal(0.15,0.04),Normal(0.14,0.03),Normal(0.14,0.03),Normal(0.14,0.03),Normal(0.15,0.03),Normal(0.16,0.03),Normal(0.14,0.05)),Choose(Month,Normal(104.44,17.22),Normal(100.72,11.17),Normal(109.34,12.57),Normal(99.05,14.07),Normal(104.31,12.93),Normal(101.11,9.67),Normal(100.71,12.99),Normal(103.43,10.81),Normal(102.34,10.58),Normal(103.46,11.66),Normal(105.38,8.67),Normal(108.02,11.66)),Choose(Month,Normal(148.25,16.01),Normal(144.81,16.79),Normal(156.43,12.28),Normal(147.71,17.4),Normal(156.73,22.33),Normal(151.22,18.07),Normal(155.48,17.94),Normal(158.24,19.05),Normal(148.08,12.03),Normal(152.05,12.23),Normal(154.23,17.25),Normal(153.68,9.11)),Choose(Month,Normal(3863.79,145.12),Normal(3723.34,141.94),Normal(4123.29,303.09),Normal(3961.35,157.2),Normal(4031.18,152.23),Normal(3899.15,40.04),Normal(3992.15,194.36),Normal(3997.12,128.12),Normal(3847.67,125.28),Normal(3995.94,122.3),Normal(4012.5,136.55),Normal(4228.14,145.73)),Choose(Month,Normal(34.4,41.94),Normal(42.04,40.11),Normal(43.2,43.63),Normal(39.84,44.23),Normal(37.97,48.13),Normal(34.05,45.53),Normal(25.42,44.29),Normal(32.96,50.89),Normal(30.97,49),Normal(26.62,42.09),Normal(23.58,37.03),Normal(20.34,32.83)),Choose(Month,Normal(0.11,0.07),Normal(0.28,0.01),Normal(0.07,0.02),Normal(0.03,0.01),Normal(0.07,0.02),Normal(0.08,0.02),Normal(0.08,0.02),Normal(0.06,0.01),Normal(0.12,0.08),Normal(0.07,0.08),Normal(0.08,0.02),Normal(0.09,0.01)),Choose(Month,Normal(9.09,1.56),Normal(8.49,1.3),Normal(9.51,1.06),Normal(9.16,1.52),Normal(9.39,1.58),Normal(9.18,1.13),Normal(9.33,0.92),Normal(9.59,1.3),Normal(9.14,1.13),Normal(9.59,1.06),Normal(9.23,1.03),Normal(10.1,0.86)),Choose(Month,Normal(47.92,4.55),Normal(45.42,3.29),Normal(49.6,4.49),Normal(47.92,4.59),Normal(48.95,4.03),Normal(47.21,3.23),Normal(48.32,4.87),Normal(48.28,3.29),Normal(47.43,3.5),Normal(48.97,3.18),Normal(48.07,2.17),Normal(50.53,4.06)),Choose(Month,Normal(13.82,0.42),Normal(12.92,0.39),Normal(13.86,0.75),Normal(13.38,0.75),Normal(13.63,0.61),Normal(13.22,0.53),Normal(13.65,0.65),Normal(14.49,0.53),Normal(13.97,0.86),Normal(14.68,0.41),Normal(14.21,0.59),Normal(14.56,1.2))))</definition>
+			<discretization>
+				<interval label="State0" upper="100" />
+				<interval label="State1" upper="500000000000" />
+			</discretization>
+		</equation>
+		<cpt id="Prescription_scenario">
+			<state id="baseline" />
+			<state id="reduced_10pct" />
+			<state id="reduced_50pct" />
+			<probabilities>0.3333333333333333 0.3333333333333333 0.3333333333333334</probabilities>
+		</cpt>
+		<equation id="MP">
+			<parents>Total_PE stMP Prescription_scenario</parents>
+			<definition>MP=If(Total_PE&gt;0,Total_PE/1000*stMP/1000,0)*Choose(Prescription_scenario,1,0.9,0.5)</definition>
+			<discretization>
+				<interval label="State0" upper="0" />
+				<interval label="State1" upper="1" />
+			</discretization>
+		</equation>
+		<equation id="MD0_stw">
+			<parents>ER MP</parents>
+			<definition lower="0" upper="100000">MD0_stw=MP*ER</definition>
+			<discretization>
+				<interval label="State0" upper="0.1" />
+				<interval label="State1" upper="100000" />
+			</discretization>
+			<property id="Units">g</property>
+		</equation>
+		<cpt id="WWTcat">
+			<state id="P" />
+			<state id="SAS" />
+			<state id="SB" />
+			<state id="TA" />
+			<state id="TB" />
+			<probabilities>0.001 0.001 0.001 0.8149999999999999 0.182</probabilities>
+		</cpt>
+		<cpt id="Treatment_scenario">
+			<state id="baseline" />
+			<state id="optimal" />
+			<probabilities>0.5 0.5</probabilities>
+		</cpt>
+		<equation id="RR">
+			<parents>Pharma WWTcat Treatment_scenario</parents>
+			<definition lower="0" upper="1">RR=Choose(Treatment_scenario,Choose(Pharma,Choose(WWTcat,Beta(0.1,10),Beta(0.27,2.13),Beta(0.24,0.85),Beta(0.35,1.52),Beta(0.45,1.63)),Choose(WWTcat,Beta(0.1,10),Beta(0.84,0.82),Beta(6.57,7.21),Beta(1.18,0.46),Beta(1.18,0.46)),Choose(WWTcat,Beta(0.1,10),Beta(0.29,6.7),Beta(0.4,22.15),Beta(0.04,0.89),Beta(0.06,1.58)),Choose(WWTcat,Beta(0.1,10),Beta(1.14,0.49),Beta(0.33,0.49),Beta(11.83,1.91),Beta(1.67,0.46)),Choose(WWTcat,Beta(0.1,10),Beta(0.51,0.95),Beta(0.1,0.85),Beta(0.66,0.78),Beta(0.55,1.02)),Choose(WWTcat,Beta(0.1,10),Beta(0.62,2.01),Beta(0.86,2.32),Beta(1.07,1.92),Beta(1.98,2.08)),Choose(WWTcat,Beta(0.1,10),Beta(0.37,1.09),Beta(0.21,1.17),Beta(0.55,0.88),Beta(0.78,2.17)),Choose(WWTcat,Beta(0.1,10),Beta(2.5,3.04),Beta(2.5,3.04),Beta(0.66,1.17),Beta(0.66,1.17)),Choose(WWTcat,Beta(0.1,10),Beta(5.21,0.52),Beta(4.48,0.65),Beta(2.76,0.06),Beta(12.61,0.38)),Choose(WWTcat,Beta(0.1,10),Beta(3.77,2.24),Beta(2.99,1.52),Beta(5.33,0.69),Beta(5.33,0.69)),Choose(WWTcat,Beta(0.1,10),Beta(19.27,0.14),Beta(44.99,1.1),Beta(150.05,0.53),Beta(44.99,1.1)),Choose(WWTcat,Beta(0.1,10),Beta(0.98,0.7),Beta(0.68,0.7),Beta(2.42,0.94),Beta(0.83,0.59)),Choose(WWTcat,Beta(0.1,10),Beta(0.83,0.19),Beta(1.15,0.13),Beta(0.83,0.19),Beta(1.15,0.13)),Choose(WWTcat,Beta(0.1,10),Beta(0.61,0.78),Beta(1.17,2.61),Beta(0.8,0.88),Beta(0.8,0.88)),Choose(WWTcat,Beta(0.1,10),Beta(0.21,1.69),Beta(0.21,1.69),Beta(0.04,0.32),Beta(0.04,0.32)),Choose(WWTcat,Beta(0.1,10),Beta(0.44,1.15),Beta(3.57,4.1),Beta(1.97,0.97),Beta(1.97,0.97))),Choose(Pharma,Choose(WWTcat,0.03,0.36,0.72,0.56,0.59),Choose(WWTcat,0.03,0.93,0.65,0.99,0.99),Choose(WWTcat,0.03,0.13,0.05,0.11,0.1),Choose(WWTcat,0.03,0.99,0.96,0.96,0.99),Choose(WWTcat,0.03,0.83,0.42,0.92,0.82),Choose(WWTcat,0.03,0.58,0.6,0.71,0.79),Choose(WWTcat,0.03,0.71,0.54,0.87,0.6),Choose(WWTcat,0.03,0.72,0.72,0.8,0.8),Choose(WWTcat,0.03,0.99,0.99,0.99,0.99),Choose(WWTcat,0.03,0.86,0.91,0.99,0.99),Choose(WWTcat,0.03,0.99,0.99,0.99,0.99),Choose(WWTcat,0.03,0.96,0.94,0.96,0.97),Choose(WWTcat,0.03,0.99,0.99,0.99,0.99),Choose(WWTcat,0.03,0.91,0.62,0.91,0.91),Choose(WWTcat,0.03,0.38,0.37,0.63,0.63),Choose(WWTcat,0.03,0.73,0.69,0.95,0.95)))</definition>
+			<discretization>
+				<interval label="State0" upper="0.1" />
+				<interval label="State1" upper="1" />
+			</discretization>
+		</equation>
+		<equation id="MD0env">
+			<parents>MD0_stw RR</parents>
+			<definition lower="0" upper="100000">MD0env=MD0_stw*(1-Min(0.99,Max(0,RR)))</definition>
+			<discretization>
+				<interval label="State0" upper="0.1" />
+				<interval label="State1" upper="100000" />
+			</discretization>
+			<property id="Units">g</property>
+		</equation>
+		<equation id="Disch">
+			<parents>Month</parents>
+			<definition lower="0.01" upper="120">Disch=Choose(Month,Lognormal(2,0.63),Lognormal(2.04,0.62),Lognormal(1.73,0.5),Lognormal(1.2,0.83),Lognormal(0.8,0.84),Lognormal(0.32,0.51),Lognormal(0.69,0.62),Lognormal(0.95,0.65),Lognormal(1.2,0.7),Lognormal(2.06,0.72),Lognormal(1.9,0.58),Lognormal(2.07,0.73))</definition>
+			<discretization>
+				<interval label="State0" upper="1" />
+				<interval label="State1" upper="120" />
+			</discretization>
+			<property id="Units">cumecs</property>
+		</equation>
+		<equation id="PNEC">
+			<parents>Pharma</parents>
+			<definition lower="0" upper="2362731">PNEC=Choose(Pharma,0.019,2.3,2,0.064,0.12,0.04,0.3,100,0.011,1.7,46,3.1,1,0.6,8.65,0.5)</definition>
+			<discretization>
+				<interval label="State0" upper="1" />
+				<interval label="State1" upper="2362731" />
+			</discretization>
+			<property id="Units">ug L-1  = mg m3</property>
+		</equation>
+		<equation id="PEC">
+			<parents>Disch MD0env</parents>
+			<definition lower="0" upper="500">PEC=If(MD0env&gt;0,MD0env*1e+06/(Disch*60*60*24*30),0)</definition>
+			<discretization>
+				<interval label="State0" upper="1" />
+				<interval label="State1" upper="500" />
+			</discretization>
+			<property id="Units">ug L-1  = mg m3</property>
+		</equation>
+		<equation id="PLRR">
+			<parents>PEC PNEC</parents>
+			<definition lower="-20" upper="20">PLRR=If(PEC&gt;0,Log10(PEC/PNEC),-4)</definition>
+			<discretization>
+				<interval label="Sustainable" upper="0" />
+				<interval label="Unsustainable" upper="20" />
+			</discretization>
+		</equation>
+		<cpt id="PRRQ">
+			<state id="Below" />
+			<state id="Above" />
+			<parents>PLRR</parents>
+			<probabilities>1 0 0 1</probabilities>
+		</cpt>
+	</nodes>
+	<cases>
+		<case name="6007">
+		</case>
+		<case name="8006">
+		</case>
+		<case name="9002">
+		</case>
+		<case name="10002">
+		</case>
+		<case name="10003">
+		</case>
+		<case name="11001">
+		</case>
+		<case name="12002">
+		</case>
+		<case name="13005">
+		</case>
+		<case name="13007">
+		</case>
+		<case name="14001">
+		</case>
+		<case name="14002">
+		</case>
+		<case name="15006">
+		</case>
+		<case name="16004">
+		</case>
+		<case name="17001">
+		</case>
+		<case name="17003">
+		</case>
+		<case name="17004">
+		</case>
+		<case name="17005">
+		</case>
+		<case name="18002">
+		</case>
+		<case name="19001">
+		</case>
+		<case name="19006">
+		</case>
+		<case name="19010">
+		</case>
+		<case name="20003">
+		</case>
+		<case name="21009">
+		</case>
+		<case name="21022">
+		</case>
+		<case name="77002">
+		</case>
+		<case name="77003">
+		</case>
+		<case name="78003">
+		</case>
+		<case name="79002">
+		</case>
+		<case name="80002">
+		</case>
+		<case name="81002">
+		</case>
+		<case name="82001">
+		</case>
+		<case name="83006">
+		</case>
+		<case name="83009">
+		</case>
+		<case name="83013">
+		</case>
+		<case name="84001">
+		</case>
+		<case name="84012">
+		</case>
+		<case name="84013">
+		</case>
+		<case name="84017">
+		</case>
+		<case name="85001">
+		</case>
+		<case name="92001">
+		</case>
+		<case name="Case0001">
+		</case>
+		<case name="Case0002">
+		</case>
+		<case name="Case0003">
+		</case>
+		<case name="Case0004">
+		</case>
+		<case name="Case0005">
+		</case>
+		<case name="Case0006">
+		</case>
+		<case name="Case0007">
+		</case>
+		<case name="Case0008">
+		</case>
+		<case name="Case0009">
+		</case>
+		<case name="Case0010">
+		</case>
+		<case name="Case0011">
+		</case>
+		<case name="Case0012">
+		</case>
+		<case name="Case0013">
+		</case>
+		<case name="Case0014">
+		</case>
+		<case name="Case0015">
+		</case>
+		<case name="Case0016">
+		</case>
+		<case name="Case0017">
+		</case>
+		<case name="Case0018">
+		</case>
+		<case name="Case0019">
+		</case>
+		<case name="Case0020">
+		</case>
+		<case name="Case0021">
+		</case>
+		<case name="Case0022">
+		</case>
+		<case name="Case0023">
+		</case>
+		<case name="Case0024">
+		</case>
+		<case name="Case0025">
+		</case>
+		<case name="Case0026">
+		</case>
+		<case name="Case0027">
+		</case>
+		<case name="Case0028">
+		</case>
+		<case name="Case0029">
+		</case>
+		<case name="Case0030">
+		</case>
+		<case name="Case0031">
+		</case>
+		<case name="Case0032">
+		</case>
+		<case name="Case0033">
+		</case>
+		<case name="Case0034">
+		</case>
+		<case name="Case0035">
+		</case>
+		<case name="Case0036">
+		</case>
+		<case name="Case0037">
+		</case>
+		<case name="Case0038">
+		</case>
+		<case name="Case0039">
+		</case>
+		<case name="Case0040">
+		</case>
+	</cases>
+	<extensions>
+		<genie version="1.0" app="GeNIe 4.1.4408.0 ACADEMIC" name="Network1">
+			<submodel id="STWs">
+				<name>STWs</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" width="2" />
+				<font color="000000" name="Arial" size="16" bold="true" />
+				<position>455 315 633 394</position>
+				<node id="ER">
+					<name>Excretion rate (ER)</name>
+					<interior color="ffcc99" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1321 565 1443 678</position>
+					<barchart active="true" width="253" height="187" />
+				</node>
+				<node id="MP">
+					<name>Mass prescribed (kg/month)</name>
+					<interior color="80ff80" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1038 368 1139 431</position>
+					<barchart active="true" width="227" height="198" />
+				</node>
+				<node id="Disch">
+					<name>Daily discharge (m3/s) (Q)</name>
+					<interior color="99ccff" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>735 1028 866 1142</position>
+					<barchart active="true" width="223" height="195" />
+				</node>
+				<node id="Month">
+					<name>Month</name>
+					<interior color="ffffff" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>719 657 875 734</position>
+					<barchart active="true" width="126" height="364" />
+				</node>
+				<node id="PNEC">
+					<name>Predicted No-effect Concentration (ug/L) (PNEC)</name>
+					<interior color="ffcc99" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1428 1022 1556 1134</position>
+					<barchart active="true" width="324" height="206" />
+				</node>
+				<node id="Pharma">
+					<name>Pharmaceutical</name>
+					<interior color="ffffff" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1642 268 1748 333</position>
+					<barchart active="true" width="194" height="476" />
+				</node>
+				<node id="PEC">
+					<name>Predicted concentration (ug/L) (C)</name>
+					<interior color="ffff99" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1024 1026 1152 1138</position>
+					<barchart active="true" width="278" height="208" />
+				</node>
+				<node id="PLRR">
+					<name>Predicted log risk ratio (PLRR)</name>
+					<interior color="ff8080" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1195 1245 1415 1388</position>
+					<barchart active="true" width="238" height="205" />
+				</node>
+				<node id="RR">
+					<name>Removal efficiency (RR)</name>
+					<interior color="ffcc99" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1324 788 1446 903</position>
+					<barchart active="true" width="257" height="196" />
+				</node>
+				<node id="PRRQ">
+					<name>PNEC exceedance probability</name>
+					<interior color="ff8080" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1280 1508 1328 1538</position>
+					<barchart active="true" width="230" height="153" />
+				</node>
+				<node id="stMP">
+					<name>Standard mass prescribed (g/1000 pers/month) (Mp)</name>
+					<interior color="ffcc99" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1020 103 1152 216</position>
+					<barchart active="true" width="322" height="195" />
+				</node>
+				<node id="MD0env">
+					<name>Effluent load (kg/month)</name>
+					<interior color="80ff80" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1027 791 1155 904</position>
+					<barchart active="true" width="240" height="194" />
+				</node>
+				<node id="MD0_stw">
+					<name>Influent load (kg/month)</name>
+					<interior color="80ff80" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1032 568 1160 681</position>
+					<barchart active="true" width="222" height="194" />
+				</node>
+				<node id="Total_PE">
+					<name>Total PE (PEtot)</name>
+					<interior color="ffffff" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>748 352 864 436</position>
+					<barchart active="true" width="170" height="171" />
+				</node>
+				<node id="WWTcat">
+					<name>Wastewater treatment category</name>
+					<interior color="ffffff" />
+					<outline color="000080" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1711 839 1759 869</position>
+					<barchart active="true" width="270" height="199" />
+				</node>
+				<node id="Treatment_scenario">
+					<name>Treatment scenario</name>
+					<interior color="ffffff" />
+					<outline color="993300" width="2" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1714 665 1762 695</position>
+					<barchart active="true" width="250" height="98" />
+				</node>
+				<node id="Prescription_scenario">
+					<name>Prescription scenario</name>
+					<interior color="ffffff" />
+					<outline color="993300" width="2" />
+					<font color="000000" name="Arial" size="16" bold="true" />
+					<position>1373 373 1421 403</position>
+					<barchart active="true" width="313" height="112" />
+				</node>
+			</submodel>
+		</genie>
+	</extensions>
+</smile>
