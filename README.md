@@ -72,7 +72,8 @@ pharma-risk-BN-public/
   └── figures/
 ```
 
-**NOTE:** The `Data_private/` directory is intentionally excluded from version control. In order to run the model script, an rSMILE license needs to be obtained and placed in this folder. SMILE license keys can be obtained from https://download.bayesfusion.com/. 
+- **NOTE:** The `Data_private/` directory is intentionally excluded from version control. In order to run the model script, an rSMILE license needs to be obtained and placed in this folder. SMILE license keys can be obtained from https://download.bayesfusion.com/. 
+
 ---
 
 
@@ -108,10 +109,4 @@ A license for rSMILE is required in order to read the BN model in R. SMILE licen
 ### 📜 License
 
 This code is released under the MIT License. See `LICENSE` for details.
-
-
-
-
-
-
 
