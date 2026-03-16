@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+title: "pharma-risk-BN-public"
+message: "If you use this code or any of the associated data sets, please cite the associated paper."
+
+authors:
+  - family-names: Troldborg
+    given-names: M.
+  - family-names: Glendell
+    given-names: M.
+  - family-names: Gagkas
+    given-names: Z.
+  - family-names: Adams
+    given-names: K.
+  - family-names: Negri
+    given-names: C.  
+repository-code: "https://github.com/madstroldborg/pharma-risk-BN-public"
+date-released: 2026
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Troldborg
+      given-names: M.
+    - family-names: Glendell
+      given-names: M.
+    - family-names: Gagkas
+      given-names: Z.
+    - family-names: Adams
+      given-names: K.
+    - family-names: Negri
+      given-names: C.
+    - family-names: Taylor
+      given-names: P.
+    - family-names: Zhang
+      given-names: Z.
+    - family-names: Cooper
+      given-names: P.
+    - family-names: Brown
+      given-names: A.
+    - family-names: May
+      given-names: L.
+    - family-names: Corrochano-Fraile
+      given-names: A.
+    - family-names: Beevers
+      given-names: L.
+    - family-names: Tyler
+      given-names: A.
+  title: "Probabilistic modelling of pharmaceutical pollutionrisk from sewage treatment work discharges using a Bayesian Network: application to a Scottish river catchment"
+  journal: "EarthArXiv"
+  year: 2026
+  doi: https://doi.org/10.31223/X5048T

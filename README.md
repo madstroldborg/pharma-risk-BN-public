@@ -4,6 +4,13 @@ This repository accompanies the analysis for the manuscript (in preparation):
 
 It contains the Bayesian Network model (built in GeNIe software) as well as the R code and the processed input datasets (where shareable) required for running the model. The repository also contains Excel files with the excretion fraction data and wastewater removal efficiency data collated from literature.
 
+### Citation
+If you use this code or the associated datasets in your research, please cite:
+
+Troldborg, M. et al. (2026). Probabilistic modelling of pharmaceutical pollution risk from sewage treatment work discharges using a Bayesian Network: application to a Scottish river catchment. *Water Research*. (submitted)
+
+A preprint version of the paper is available at: [https://doi.org/10.31223/X5048T] 
+
 ---
 
 ### Project Overview
