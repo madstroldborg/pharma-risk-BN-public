@@ -57,7 +57,7 @@ The analysis consists of the following main components:
 
 ---
 
-### 📁 Repository Structure
+### Repository Structure
 ```
 pharma-risk-BN-public/
 ├── README.md
@@ -84,7 +84,7 @@ pharma-risk-BN-public/
 ---
 
 
-### 📦 Reproducible R Environment
+### Reproducible R Environment
 
 This project uses the `{renv}` package to ensure reproducibility of the R environment.
 
@@ -101,7 +101,7 @@ This will install the exact package versions used in the original analysis.
 ---
 
 
-### 🧠 Bayesian Network Model (rSMILE / GeNIe)
+### Bayesian Network Model (rSMILE / GeNIe)
 
 The BN model is implemented using the rSMILE R package, which interfaces with
 the GeNIe Modeler software.
@@ -113,7 +113,7 @@ A license for rSMILE is required in order to read the BN model in R. SMILE licen
 
 ---
 
-### 📜 License
+### License
 
 This code is released under the MIT License. See `LICENSE` for details.
 
