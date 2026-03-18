@@ -9,7 +9,7 @@ If you use this code or the associated datasets in your research, please cite:
 
 Troldborg, M. et al. (2026). Probabilistic modelling of pharmaceutical pollution risk from sewage treatment work discharges using a Bayesian Network: application to a Scottish river catchment. *Water Research*. (submitted)
 
-A preprint version of the paper is available at: [https://doi.org/10.31223/X5048T] 
+A preprint version of the paper is available at: https://doi.org/10.31223/X5048T 
 
 ---
 
