@@ -7,7 +7,7 @@ It contains the Bayesian Network model (built in GeNIe software) as well as the 
 ### Citation
 If you use this code or the associated datasets in your research, please cite:
 
-Troldborg, M. et al. (2026). Probabilistic modelling of pharmaceutical pollution risk from sewage treatment work discharges using a Bayesian Network: application to a Scottish river catchment. *Water Research*. (submitted)
+Troldborg, M. et al. Probabilistic modelling of pharmaceutical pollution risk from sewage treatment work discharges using a Bayesian Network: application to a Scottish river catchment. (in review)
 
 A preprint version of the paper is available at: https://doi.org/10.31223/X5048T 
 
